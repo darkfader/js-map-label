@@ -32,18 +32,19 @@
 function MapLabel(opt_options) {
 	if (!MapLabel.prototype.setValues) {
 		for (var property in google.maps.OverlayView.prototype) {
-			MapLabel.prototype[property] = google.maps.OverlayView.prototype[property];
+			if(!MapLabel.prototype.hasOwnProperty(property)) {
+				MapLabel.prototype[property] = google.maps.OverlayView.prototype[property];
+			}
 		}
 	}
 
+	this.set('align', 'center');
+	this.set('fontColor', '#000000');
 	this.set('fontFamily', 'sans-serif');
 	this.set('fontSize', 12);
-	this.set('fontColor', '#000000');
-	this.set('strokeWeight', 4);
 	this.set('strokeColor', '#ffffff');
-	this.set('align', 'center');
+	this.set('strokeWeight', 4);
 	this.set('labelPos', 'bottom');
-
 	this.set('zIndex', 1e3);
 
 	this.setValues(opt_options);
