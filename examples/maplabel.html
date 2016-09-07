@@ -36,8 +36,14 @@
         marker.bindTo('map', mapLabel);
         marker.bindTo('position', mapLabel);
         marker.setDraggable(true);
+        mapLabel.set('marker', marker);
 
         var map2 = new google.maps.Map(document.getElementById('map2'), myOptions);
+
+        var changePosition = document.getElementById('change-position');
+        google.maps.event.addDomListener(changePosition, 'click', function() {
+          mapLabel.set('label-pos', document.getElementById('label-pos').value);
+        });
 
         var changeAlign = document.getElementById('change-align');
         google.maps.event.addDomListener(changeAlign, 'click', function() {
@@ -93,8 +99,8 @@
   </head>
   <body>
     <h1>Map Label Utility Library</h1>
-    <div id="map" style="width: 500px; height: 500px; float: left"></div>
-    <div id="map2" style="width: 500px; height: 500px; float: left; margin-left: 20px;"></div>
+    <div id="map" style="width: 500px; height: 300px; float: left"></div>
+    <div id="map2" style="width: 500px; height: 300px; float: left; margin-left: 20px;"></div>
     <div style="clear: both; padding-top: 10px;">
       <label>Map:</label>
       <button id="move">Toggle Maps</button>
@@ -131,6 +137,16 @@
         <option value="right">Right</option>
       </select>
       <button id="change-align">Align</button>
+    </div>
+    <div>
+        <label>Position:</label>
+        <select id="label-pos">
+            <option value="top">Top</option>
+            <option value="bottom" selected>Bottom</option>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+        </select>
+      <button id="change-position">Change Position</button>
     </div>
   </body>
 </html>
