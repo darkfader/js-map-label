@@ -36,7 +36,7 @@ function MapLabel(opt_options) {
 	this.set('strokeWeight', 4);
 	this.set('strokeColor', '#ffffff');
 	this.set('align', 'center');
-	this.set('label-pos', 'bottom');
+	this.set('labelPos', 'bottom');
 
 	this.set('zIndex', 1e3);
 
@@ -55,7 +55,7 @@ MapLabel.prototype.changed = function (prop) {
 	case 'strokeWeight':
 	case 'strokeColor':
 	case 'align':
-	case 'label-pos':
+	case 'labelPos':
 	case 'text':
 	case 'marker':
 		return this.drawCanvas_();
@@ -82,31 +82,29 @@ MapLabel.prototype.drawCanvas_ = function () {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.strokeStyle = this.get('strokeColor');
 	ctx.fillStyle = this.get('fontColor');
-	var fontSize = Number(this.get('fontSize'));
-	ctx.font = fontSize + 'px ' + this.get('fontFamily');
+	ctx.font = this.get('fontSize') + 'px ' + this.get('fontFamily');
 	var strokeWeight = Number(this.get('strokeWeight'));
 
 	var text = this.get('text');
 	if (text) {
-		if (strokeWeight) {
-			ctx.lineWidth = strokeWeight;
-			ctx.strokeText(text, strokeWeight, strokeWeight);
-		}
-
-		ctx.fillText(text, strokeWeight, strokeWeight);
 
 		// get marker size (use default size if no custom icon)
-		var marker = this.get('marker');
-		var markerIcon = marker.getIcon();
-		var markerSize = markerIcon ? markerIcon.size() : {
+		var markerSize = {
 			height : 40,
 			width : 22
 		};
+		var marker = this.get('marker');
+		if (marker) {
+			var markerIcon = marker.getIcon();
+			if (markerIcon) {
+				markerSize = markerIcon.size;
+			}
+		}
 		var textMeasure = ctx.measureText(text);
 		var textWidth = textMeasure.width + strokeWeight;
 		style.marginLeft = this.getMarginLeft_(textWidth, markerSize.width) + 'px';
 		var textHeight = this.getTextHeight_(text);
-		switch (this.get('label-pos')) {
+		switch (this.get('labelPos')) {
 		case 'top':
 			// move text (somewhere) above the marker
 			style.marginTop = -textHeight - markerSize.height * 1.1 + 'px';
@@ -121,6 +119,22 @@ MapLabel.prototype.drawCanvas_ = function () {
 			// bring text level with marker
 			style.marginTop =  - (textHeight / 2) - (markerSize.height / 2) + 'px';
 		}
+
+		// TODO fix this - text drawing position is messed up when you resize canvas
+		// resize canvas so label still fits
+		// if (textWidth > canvas.width) {
+			// canvas.width = textWidth * 2;
+		// }
+		// if (textHeight > canvas.height) {
+			// canvas.height = textHeight * 2;
+		// }
+
+		if (strokeWeight) {
+			ctx.lineWidth = strokeWeight;
+			ctx.strokeText(text, strokeWeight, strokeWeight);
+		}
+
+		ctx.fillText(text, strokeWeight, strokeWeight);
 	}
 };
 
@@ -130,6 +144,7 @@ MapLabel.prototype.drawCanvas_ = function () {
  * @param {string} The text to be drawn
  */
 MapLabel.prototype.getTextHeight_ = function (label) {
+	// create a dummy element containing the text string
 	var body = document.getElementsByTagName("body")[0];
 	var dummy = document.createElement("div");
 	var dummyText = document.createTextNode(label);
@@ -138,8 +153,12 @@ MapLabel.prototype.getTextHeight_ = function (label) {
 	dummy.style.fontSize = this.get('fontSize') + 'px';
 	dummy.style.left = '-99999px';
 	dummy.style.top = '-99999px';
+
+	// add to the document and get the text height
 	body.appendChild(dummy);
 	var result = dummy.offsetHeight;
+
+	// cleanup
 	body.removeChild(dummy);
 	return result;
 };
@@ -172,7 +191,7 @@ MapLabel.prototype['onAdd'] = MapLabel.prototype.onAdd;
  * @return {number} the margin-left, in pixels.
  */
 MapLabel.prototype.getMarginLeft_ = function (textWidth, markerWidth) {
-	switch (this.get('label-pos')) {
+	switch (this.get('labelPos')) {
 	case 'top':
 	case 'bottom':
 		// Top/bottom position - use alignment to get left/right/centred text
@@ -185,9 +204,9 @@ MapLabel.prototype.getMarginLeft_ = function (textWidth, markerWidth) {
 		return textWidth / -2;
 	case 'left':
 		// Left/right position - include a margin to avoid the marker
-		return -textWidth - markerWidth;
+		return -textWidth - (markerWidth * 0.6);
 	case 'right':
-		return markerWidth;
+		return markerWidth * 0.6;
 	}
 };
 
