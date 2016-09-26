@@ -45,6 +45,8 @@ function MapLabel(opt_options) {
 	this.set('strokeColor', '#ffffff');
 	this.set('strokeWeight', 4);
 	this.set('labelPos', 'bottom');
+	this.set('lineJoin', 'round');
+	this.set('baseline', 'top');
 	this.set('zIndex', 1e3);
 
 	this.setValues(opt_options);
@@ -86,9 +88,7 @@ MapLabel.prototype.drawCanvas_ = function () {
 
 	var ctx = canvas.getContext('2d');
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.strokeStyle = this.get('strokeColor');
-	ctx.fillStyle = this.get('fontColor');
-	ctx.font = this.get('fontSize') + 'px ' + this.get('fontFamily');
+	this.setStyle_(ctx);
 	var strokeWeight = Number(this.get('strokeWeight'));
 
 	var text = this.get('text');
@@ -126,23 +126,35 @@ MapLabel.prototype.drawCanvas_ = function () {
 			style.marginTop =  - (textHeight / 2) - (markerSize.height / 2) + 'px';
 		}
 
-		// TODO fix this - text drawing position is messed up when you resize canvas
-		// resize canvas so label still fits
-		// if (textWidth > canvas.width) {
-			// canvas.width = textWidth * 2;
-		// }
-		// if (textHeight > canvas.height) {
-			// canvas.height = textHeight * 2;
-		// }
+		var bufferX = textWidth * .05 > strokeWeight * 2 ? textWidth * .05 : strokeWeight * 2;
+		var bufferY = textHeight * .05 > strokeWeight * 2 ? textHeight * .05 : strokeWeight * 2;
+		canvas.width = textWidth + bufferX;
+		canvas.height = textHeight + bufferY;
+		// need to reapply context props if canvas size has changed
+		this.setStyle_(ctx);
 
 		if (strokeWeight) {
-			ctx.lineWidth = strokeWeight;
 			ctx.strokeText(text, strokeWeight, strokeWeight);
 		}
 
 		ctx.fillText(text, strokeWeight, strokeWeight);
 	}
 };
+
+/**
+ * Sets the style properties for the label
+ * @private
+ * @param {string} The canvas context to be drawn onto
+ */
+MapLabel.prototype.setStyle_ = function (ctx) {
+	ctx.lineJoin = this.lineJoin;
+	ctx.lineWidth = this.strokeWeight;
+	ctx.strokeStyle = this.strokeColor;
+	// ctx.textAlign = this.textAlign;
+	ctx.textBaseline = this.baseline;
+	ctx.font = this.fontSize + 'px ' + this.fontFamily;
+	ctx.fillStyle = this.fontColor;
+}
 
 /**
  * Gets the height in pixels of a text string for given font and size
@@ -176,10 +188,6 @@ MapLabel.prototype.onAdd = function () {
 	var canvas = this.canvas_ = document.createElement('canvas');
 	var style = canvas.style;
 	style.position = 'absolute';
-
-	var ctx = canvas.getContext('2d');
-	ctx.lineJoin = 'round';
-	ctx.textBaseline = 'top';
 
 	this.drawCanvas_();
 
